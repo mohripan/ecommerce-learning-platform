@@ -27,3 +27,5 @@ Thumbs.db
 
 # Dependencies
 node_modules/
+terraform/.terraform/
+.terraform.lock.hcl
