@@ -1,0 +1,85 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        required: true
+        options:
+          - staging
+          - production
+      service:
+        description: Service to deploy
+        type: choice
+        required: true
+        options:
+          - all
+          - api-gateway
+          - order-service
+          - inventory-service
+          - notification-service
+          - analytics-service
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  HELM_CHART_PATH: kubernetes/helm/ecommerce-platform
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.service }} to ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set kubeconfig
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Deploy selected service(s)
+        run: |
+          NAMESPACE="ecommerce-${{ inputs.environment }}"
+          IMAGE_TAG="${{ github.sha }}"
+          SERVICES="${{ inputs.service }}"
+
+          if [ "$SERVICES" = "all" ]; then
+            SERVICES="api-gateway order-service inventory-service notification-service analytics-service"
+          fi
+
+          for SERVICE in $SERVICES; do
+            echo "==> Deploying $SERVICE to ${{ inputs.environment }}..."
+            helm upgrade --install "$SERVICE" "${{ env.HELM_CHART_PATH }}" \
+              --namespace "$NAMESPACE" \
+              --create-namespace \
+              --set "services.${SERVICE}.image.repository=${{ env.REGISTRY }}/${{ github.repository }}/${SERVICE}" \
+              --set "services.${SERVICE}.image.tag=${IMAGE_TAG}" \
+              --set "global.environment=${{ inputs.environment }}" \
+              --values "${{ env.HELM_CHART_PATH }}/values.yaml" \
+              --wait \
+              --timeout 5m
+            echo "==> $SERVICE deployed successfully."
+          done
+
+      - name: Verify deployment
+        run: |
+          NAMESPACE="ecommerce-${{ inputs.environment }}"
+          echo "==> Checking pod status in $NAMESPACE..."
+          kubectl get pods -n "$NAMESPACE" -o wide
+          echo ""
+          echo "==> Checking services in $NAMESPACE..."
+          kubectl get svc -n "$NAMESPACE"

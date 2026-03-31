@@ -1,0 +1,12 @@
+apiVersion: v2
+name: ecommerce-platform
+description: Distributed Order & Fulfillment Platform
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: ecommerce-platform-team
+keywords:
+  - ecommerce
+  - order-fulfillment
+  - microservices

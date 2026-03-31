@@ -1,0 +1,38 @@
+# Build outputs
+**/bin/
+**/obj/
+**/target/
+**/project/target/
+**/project/project/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.suo
+*.user
+*.sln.docstates
+.vs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Dependencies
+node_modules/
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate*
+terraform/*.tfvars
+!terraform/terraform.tfvars.example
+terraform/.terraform/
+.terraform.lock.hcl

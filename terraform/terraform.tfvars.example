@@ -1,0 +1,34 @@
+# =============================================================================
+# Example Variable Values
+# =============================================================================
+# Copy this file to terraform.tfvars and adjust the values to your environment.
+#
+#   cp terraform.tfvars.example terraform.tfvars
+# =============================================================================
+
+project_name = "ecommerce-platform"
+environment  = "staging"
+aws_region   = "ap-southeast-1"
+
+# VPC
+vpc_cidr = "10.0.0.0/16"
+
+# EKS
+eks_cluster_version     = "1.29"
+eks_node_instance_types = ["t3.medium"]
+eks_node_min_size       = 2
+eks_node_max_size       = 5
+eks_node_desired_size   = 3
+
+# RDS
+rds_instance_class    = "db.t3.micro"
+rds_allocated_storage = 20
+rds_engine_version    = "16"
+
+# ElastiCache Redis
+redis_node_type = "cache.t3.micro"
+
+# MSK (Kafka)
+msk_instance_type   = "kafka.t3.small"
+msk_kafka_version   = "3.6.0"
+msk_ebs_volume_size = 50

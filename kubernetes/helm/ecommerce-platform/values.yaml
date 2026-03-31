@@ -1,0 +1,224 @@
+# =============================================================================
+# Global Configuration
+# =============================================================================
+global:
+  imagePullPolicy: IfNotPresent
+  namespace: ecommerce
+
+  kafka:
+    bootstrapServers: kafka:9092
+
+  otel:
+    endpoint: http://jaeger:4317
+
+  redis:
+    host: redis
+    port: 6379
+
+# =============================================================================
+# API Gateway - ASP.NET Core 8.0 (C#)
+# =============================================================================
+apiGateway:
+  enabled: true
+  replicas: 2
+  image:
+    repository: ecommerce/api-gateway
+    tag: "1.0.0"
+  port: 8080
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  healthCheck:
+    liveness:
+      path: /health/live
+      initialDelaySeconds: 60
+      periodSeconds: 30
+    readiness:
+      path: /health/ready
+      initialDelaySeconds: 30
+      periodSeconds: 10
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  env:
+    ORDER_SERVICE_URL: http://order-service:8080
+    INVENTORY_SERVICE_URL: http://inventory-service:8080
+    JWT_ISSUER_URI: http://keycloak:8080/realms/ecommerce
+    OTEL_SERVICE_NAME: api-gateway
+
+# =============================================================================
+# Order Service - Java 17 / Spring Boot (Maven)
+# =============================================================================
+orderService:
+  enabled: true
+  replicas: 2
+  image:
+    repository: ecommerce/order-service
+    tag: "1.0.0"
+  port: 8080
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  healthCheck:
+    liveness:
+      path: /actuator/health
+      initialDelaySeconds: 60
+      periodSeconds: 30
+    readiness:
+      path: /actuator/health
+      initialDelaySeconds: 30
+      periodSeconds: 10
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  env:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-order:5432/orderdb
+    SPRING_DATASOURCE_USERNAME: order_user
+    SPRING_DATASOURCE_PASSWORD: order_pass
+    OTEL_SERVICE_NAME: order-service
+
+# =============================================================================
+# Inventory Service - Scala 3 / Akka
+# =============================================================================
+inventoryService:
+  enabled: true
+  replicas: 2
+  image:
+    repository: ecommerce/inventory-service
+    tag: "1.0.0"
+  port: 8080
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  healthCheck:
+    liveness:
+      path: /health
+      initialDelaySeconds: 60
+      periodSeconds: 30
+    readiness:
+      path: /health
+      initialDelaySeconds: 30
+      periodSeconds: 10
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  env:
+    DB_HOST: postgres-inventory
+    DB_PORT: "5432"
+    DB_NAME: inventorydb
+    DB_USER: inventory_user
+    DB_PASSWORD: inventory_pass
+    OTEL_SERVICE_NAME: inventory-service
+
+# =============================================================================
+# Notification Service - ASP.NET Core 8.0 Worker (C#)
+# =============================================================================
+notificationService:
+  enabled: true
+  replicas: 1
+  image:
+    repository: ecommerce/notification-service
+    tag: "1.0.0"
+  port: 8080
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  healthCheck:
+    liveness:
+      path: /health
+      initialDelaySeconds: 60
+      periodSeconds: 30
+    readiness:
+      path: /health
+      initialDelaySeconds: 30
+      periodSeconds: 10
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  env:
+    Kafka__BootstrapServers: ""  # Overridden by configmap
+    Otel__Endpoint: ""           # Overridden by configmap
+    OTEL_SERVICE_NAME: notification-service
+
+# =============================================================================
+# Analytics Service - Scala 3 / Akka
+# =============================================================================
+analyticsService:
+  enabled: true
+  replicas: 1
+  image:
+    repository: ecommerce/analytics-service
+    tag: "1.0.0"
+  port: 8080
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  healthCheck:
+    liveness:
+      path: /api/v1/health
+      initialDelaySeconds: 60
+      periodSeconds: 30
+    readiness:
+      path: /api/v1/health
+      initialDelaySeconds: 30
+      periodSeconds: 10
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  env:
+    DB_HOST: postgres-analytics
+    DB_PORT: "5432"
+    DB_NAME: analyticsdb
+    DB_USER: analytics_user
+    DB_PASSWORD: analytics_pass
+    OTEL_SERVICE_NAME: analytics-service
