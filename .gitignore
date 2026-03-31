@@ -27,5 +27,12 @@ Thumbs.db
 
 # Dependencies
 node_modules/
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate*
+terraform/*.tfvars
+!terraform/terraform.tfvars.example
 terraform/.terraform/
 .terraform.lock.hcl
