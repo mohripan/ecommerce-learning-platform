@@ -98,7 +98,7 @@ public sealed class OrderServiceProxy
 
         PropagateHeaders(context, request);
 
-        _logger.LogDebug("Forwarding {Method} {Path} to Order Service", method, path);
+        _logger.LogDebug("Forwarding {Method} {Path} to Order Service", method, Sanitize(path));
 
         try
         {
@@ -109,15 +109,20 @@ public sealed class OrderServiceProxy
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Order Service request failed: {Method} {Path}", method, path);
+            _logger.LogError(ex, "Order Service request failed: {Method} {Path}", method, Sanitize(path));
             return ProxyResult.ServiceUnavailable("Order Service is currently unavailable.");
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
         {
-            _logger.LogError(ex, "Order Service request timed out: {Method} {Path}", method, path);
+            _logger.LogError(ex, "Order Service request timed out: {Method} {Path}", method, Sanitize(path));
             return ProxyResult.GatewayTimeout("Order Service did not respond in time.");
         }
     }
+
+    /// <summary>Strips CR/LF characters to prevent log-injection attacks.</summary>
+    private static string Sanitize(string value) =>
+        value.Replace("\r", string.Empty, StringComparison.Ordinal)
+             .Replace("\n", string.Empty, StringComparison.Ordinal);
 
     private static void PropagateHeaders(HttpContext context, HttpRequestMessage request)
     {
