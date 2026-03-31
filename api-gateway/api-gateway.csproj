@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>ApiGateway</RootNamespace>
+    <AssemblyName>ApiGateway</AssemblyName>
+    <UserSecretsId>api-gateway-secrets</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Authentication -->
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
+
+    <!-- Health checks -->
+    <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
+
+    <!-- OpenTelemetry -->
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.11.2" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.11.1" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.11.1" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.11.2" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.11.2" />
+
+    <!-- Resiliency -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.0.0" />
+
+    <!-- Serialization -->
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+
+</Project>
