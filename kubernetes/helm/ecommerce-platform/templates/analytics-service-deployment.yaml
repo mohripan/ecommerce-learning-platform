@@ -1,0 +1,62 @@
+{{- if .Values.analyticsService.enabled }}
+{{- $serviceName := "analytics-service" }}
+{{- $svcValues := .Values.analyticsService }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ include "ecommerce-platform.namespace" . }}
+  labels:
+    {{- include "ecommerce-platform.serviceLabels" (dict "serviceName" $serviceName "serviceValues" $svcValues "Release" .Release "Chart" .Chart) | nindent 4 }}
+spec:
+  replicas: {{ $svcValues.replicas }}
+  selector:
+    matchLabels:
+      {{- include "ecommerce-platform.selectorLabels" (dict "serviceName" $serviceName "Release" .Release) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ecommerce-platform.serviceLabels" (dict "serviceName" $serviceName "serviceValues" $svcValues "Release" .Release "Chart" .Chart) | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: {{ $serviceName }}
+          image: "{{ $svcValues.image.repository }}:{{ $svcValues.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $svcValues.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "ecommerce-platform.configmapName" . }}
+          env:
+            {{- range $key, $value := $svcValues.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          resources:
+            requests:
+              cpu: {{ $svcValues.resources.requests.cpu }}
+              memory: {{ $svcValues.resources.requests.memory }}
+            limits:
+              cpu: {{ $svcValues.resources.limits.cpu }}
+              memory: {{ $svcValues.resources.limits.memory }}
+          livenessProbe:
+            httpGet:
+              path: {{ $svcValues.healthCheck.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ $svcValues.healthCheck.liveness.initialDelaySeconds }}
+            periodSeconds: {{ $svcValues.healthCheck.liveness.periodSeconds }}
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: {{ $svcValues.healthCheck.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ $svcValues.healthCheck.readiness.initialDelaySeconds }}
+            periodSeconds: {{ $svcValues.healthCheck.readiness.periodSeconds }}
+            timeoutSeconds: 5
+            failureThreshold: 3
+{{- end }}

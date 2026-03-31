@@ -1,0 +1,20 @@
+{{- if .Values.analyticsService.enabled }}
+{{- $serviceName := "analytics-service" }}
+{{- $svcValues := .Values.analyticsService }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $serviceName }}
+  namespace: {{ include "ecommerce-platform.namespace" . }}
+  labels:
+    {{- include "ecommerce-platform.serviceLabels" (dict "serviceName" $serviceName "serviceValues" $svcValues "Release" .Release "Chart" .Chart) | nindent 4 }}
+spec:
+  type: {{ $svcValues.service.type }}
+  ports:
+    - port: {{ $svcValues.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "ecommerce-platform.selectorLabels" (dict "serviceName" $serviceName "Release" .Release) | nindent 4 }}
+{{- end }}
